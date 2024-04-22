@@ -57,8 +57,9 @@ namespace HL7.Dotnetcore
         /// Parse the HL7 message in text format, throws HL7Exception if error occurs
         /// </summary>
         /// <param name="bypassValidation">To parse the message without any validation</param>
+        /// <param name="validateRoundTripSerialisation">Validates the serialised message matches the original message</param>
         /// <returns>boolean</returns>
-        public bool ParseMessage(bool bypassValidation = false)
+        public bool ParseMessage(bool bypassValidation = false, bool validateRoundTripSerialisation = true)
         {
             bool isValid = false;
             bool isParsed = false;
@@ -119,8 +120,12 @@ namespace HL7.Dotnetcore
 
                     if (!string.IsNullOrEmpty(strSerializedMessage))
                     {
-                        if (this.Equals(strSerializedMessage))
-                            isParsed = true;
+                        if (validateRoundTripSerialisation && !this.Equals(strSerializedMessage))
+                        {
+                            throw new HL7Exception($"Round Trip Parsing Error, reserialising message produced a different result");
+                        }
+
+                        isParsed = true;
                     }
                     else
                     {
