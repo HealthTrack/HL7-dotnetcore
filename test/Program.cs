@@ -10,6 +10,7 @@ namespace HL7.Dotnetcore.Test
     {
         private string HL7_ORM;
         private string HL7_ADT;
+        private string HL7_ADT_NOPROCESSINGID;
 
         public static void Main(string[] args)
         {
@@ -22,9 +23,15 @@ namespace HL7.Dotnetcore.Test
 
         public HL7Test()
         {
+            ReadTestFiles();
+        }
+
+        private void ReadTestFiles()
+        {
             var path = Path.GetDirectoryName(typeof(HL7Test).GetTypeInfo().Assembly.Location) + "/";
             this.HL7_ORM = File.ReadAllText(path + "Sample-ORM.txt");
             this.HL7_ADT = File.ReadAllText(path + "Sample-ADT.txt");
+            this.HL7_ADT_NOPROCESSINGID = File.ReadAllText(path + "Sample-ADT-NoProcessingID.txt");
         }
 
         [TestMethod]
@@ -35,6 +42,27 @@ namespace HL7.Dotnetcore.Test
 
             // message.ParseMessage();
             // File.WriteAllText("SmokeTestResult.txt", message.SerializeMessage(false));
+        }
+
+        [TestMethod]
+        public void ParseTestNoProcessingID()
+        {
+            ReadTestFiles();
+
+            var message = new Message(this.HL7_ADT_NOPROCESSINGID);
+
+            Assert.ThrowsException<HL7Exception>(() =>
+            {
+                var isParsed = message.ParseMessage();
+                Assert.IsTrue(isParsed);
+            });
+
+            message = new Message(this.HL7_ADT_NOPROCESSINGID);
+
+            // opt out of ProcessingID validation
+            var isParsed = message.ParseMessage(false, false, true);
+            Assert.IsTrue(isParsed);
+            Assert.AreEqual("AcmeHIS", message.GetValue("MSH.3"));
         }
 
         [TestMethod]

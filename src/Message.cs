@@ -58,8 +58,9 @@ namespace HL7.Dotnetcore
         /// </summary>
         /// <param name="bypassValidation">To parse the message without any validation</param>
         /// <param name="validateRoundTripSerialisation">Validates the serialised message matches the original message</param>
+        /// <param name="ignoreMissingProcessingID">Opt out of validating the presence of a value in MSH-11.  Stops the `MSH.11 - Processing ID not found` exception from occurring.</param>
         /// <returns>boolean</returns>
-        public bool ParseMessage(bool bypassValidation = false, bool validateRoundTripSerialisation = true)
+        public bool ParseMessage(bool bypassValidation = false, bool validateRoundTripSerialisation = true, bool ignoreMissingProcessingID = false)
         {
             bool isValid = false;
             bool isParsed = false;
@@ -74,7 +75,15 @@ namespace HL7.Dotnetcore
             }
             catch (HL7Exception ex)
             {
-                throw ex;
+                var ignoreMissingProcessingId = ignoreMissingProcessingID && ex.Message == "Failed to validate the message with error - Error occured while accessing MSH.11 - MSH.11 - Processing ID not found";
+                if (ignoreMissingProcessingId)
+                {
+                    isValid = true;
+                }
+                else
+                {
+                    throw ex;
+                }
             }
             catch (Exception ex)
             {
